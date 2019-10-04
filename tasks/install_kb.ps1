@@ -66,10 +66,10 @@ if ($PSSenderInfo){
     if ($RootFolder.GetTask($TaskName).State -eq 3) {
         if ($RootFolder.GetTask($TaskName).LastTaskResult -eq 0) {
             Write-Host "Installation of $KB took $([int]$timer.Elapsed.TotalSeconds) seconds"
-            $RootFolder.DeleteTask($TaskName)
+            $RootFolder.DeleteTask($TaskName,0)
         } Else {
             Write-Host "Installation of $KB seems to have failed, the scheduled task exited with errorcode $($RootFolder.GetTask($TaskName).LastTaskResult)"
-            $RootFolder.DeleteTask($TaskName)
+            $RootFolder.DeleteTask($TaskName,0)
             Exit 1
         }
     } Else {
