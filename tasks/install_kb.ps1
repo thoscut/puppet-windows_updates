@@ -69,7 +69,7 @@ if ($PSSenderInfo){
             $RootFolder.DeleteTask($TaskName,0)
         } Else {
             Write-Host "Installation of $KB seems to have failed, the scheduled task exited with errorcode $($RootFolder.GetTask($TaskName).LastTaskResult)"
-            $RootFolder.DeleteTask($TaskName,0)
+            #$RootFolder.DeleteTask($TaskName,0)
             Exit 1
         }
     } Else {
