@@ -27,7 +27,7 @@ if ($PSSenderInfo){
     }
     Write-Host "Running via WinRM: Creating scheduled task to install update $kb"
     [String]$TaskName = "PSWindowsUpdate"
-    [String]$Script = "Import-Module -Name '$_installdir/windows_updates/files/PSWindowsUpdate'; [void](Install-WindowsUpdate -KBArticleID '$KB' -AcceptAll -IgnoreReboot)"
+    [String]$Script = "Import-Module -Name '$_installdir/windows_updates/files/PSWindowsUpdate'; Get-WindowsUpdate -KBArticleID '$KB' -Install -AcceptAll -IgnoreReboot)"
   
     $Scheduler = New-Object -ComObject Schedule.Service
     $Task = $Scheduler.NewTask(0)
@@ -78,7 +78,7 @@ if ($PSSenderInfo){
     }
 } Else {
     # Not running in a WinRM session, we can install Windows Updates directly
-    [void](Install-WindowsUpdate -KBArticleID "$KB" -AcceptAll -IgnoreReboot)
+    Get-WindowsUpdate -KBArticleID "$KB" -Install -AcceptAll -IgnoreReboot
     Start-Sleep 10
 }
 
