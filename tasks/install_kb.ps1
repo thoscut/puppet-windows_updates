@@ -5,9 +5,19 @@ Param(
     [Parameter(Mandatory = $True)] [String]  $_installdir
 )
 
+$Trackingpath = "$Env:ProgramData\InstalledUpdates"
 $ProgressPreference = 'SilentlyContinue'
 $ErrCodesFile = "$_installdir/windows_updates/lib/windows_updates/errorcodes.txt"
 $all_error_codes = Get-Content -raw -Path $ErrCodesFile | ConvertFrom-StringData
+
+if (!(Test-Path -Path $Trackingpath)){
+    New-Item -ItemType directory -Path $Trackingpath -Force
+}
+
+if ((Get-Content "$Trackingpath\$KB.flg") -eq "Installed") {
+    Write-Host "Update $KB is already installed, skipping installation..."
+    Exit 0
+}
 
 Import-Module -Name "$_installdir/windows_updates/files/PSWindowsUpdate"
 if (Get-WindowsUpdate -KBArticleID "$KB") {
@@ -85,7 +95,7 @@ if ($PSSenderInfo){
 $update = Get-WUHistory | Where-Object KB -eq $KB | Sort-Object Date -Descending | Select-Object -First 1
 switch -regex ($update.Result) {
     'Succeeded' {
-        Set-Content "C:\ProgramData\InstalledUpdates\$KB.flg" "Installed"
+        Set-Content "$Trackingpath\$KB.flg" "Installed"
         if ($restart) {
             Write-Host "Restart parameter enabled, restarting node in 30 seconds"
             & shutdown -r -t 30
@@ -95,7 +105,7 @@ switch -regex ($update.Result) {
         $HResult = [Convert]::ToString($update.HResult, 16)
         $Message = $all_error_codes["0x$HResult"]
         Write-Host "Update $KB was installed but reported (likely reboot needed): $Message"
-        Set-Content "C:\ProgramData\InstalledUpdates\$KB.flg" "Installed"
+        Set-Content "$Trackingpath\$KB.flg" "Installed"
         if ($restart) {
             Write-Host "Restart parameter enabled, restarting node in 30 seconds"
             & shutdown -r -t 30
