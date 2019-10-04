@@ -11,7 +11,7 @@ $ErrCodesFile = "$_installdir/windows_updates/lib/windows_updates/errorcodes.txt
 $all_error_codes = Get-Content -raw -Path $ErrCodesFile | ConvertFrom-StringData
 
 if (!(Test-Path -Path $Trackingpath)){
-    New-Item -ItemType directory -Path $Trackingpath -Force
+    New-Item -ItemType directory -Path $Trackingpath -Force | Out-Null
 }
 
 if ((Get-Content "$Trackingpath\$KB.flg" -ErrorAction SilentlyContinue) -eq "Installed") {
