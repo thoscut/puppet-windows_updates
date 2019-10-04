@@ -14,7 +14,6 @@ if (Get-WindowsUpdate -KBArticleID "$KB") {
     Write-Host "Update $KB is available on the update server, proceeding with installation..."
 } Else {
     Write-Host "Update $KB is not provided by the update server!"
-    Remove-Module -Name "PSWindowsUpdate"
     Exit 5
 }
 
@@ -24,7 +23,6 @@ if ($PSSenderInfo){
     $Role = (New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
     if (!$Role){
         Write-Host "To install updates, the account used to connect over WinRM must have administrative permissions."
-        Remove-Module -Name "PSWindowsUpdate"
         Exit 1
     }
     Write-Host "Running via WinRM: Creating scheduled task to install update $kb"
@@ -53,7 +51,6 @@ if ($PSSenderInfo){
     $RootFolder = $Scheduler.GetFolder("\")
     if ($Scheduler.GetRunningTasks(0) | Where-Object {$_.Name -eq $TaskName}) {
         Write-Host "A PSWindowsUpdate scheduled task is already running, aborting creation of new scheduled task to install $KB"
-        Remove-Module -Name "PSWindowsUpdate"
         Exit 1
     }
     $RootFolder.RegisterTaskDefinition($TaskName, $Task, 6, "SYSTEM", $Null, 1) | Out-Null
@@ -69,14 +66,14 @@ if ($PSSenderInfo){
     if ($RootFolder.GetTask($TaskName).State -eq 3) {
         if ($RootFolder.GetTask($TaskName).LastTaskResult -eq 0) {
             Write-Host "Installation of $KB took $([int]$timer.Elapsed.TotalSeconds) seconds"
+            $RootFolder.DeleteTask($TaskName)
         } Else {
             Write-Host "Installation of $KB seems to have failed, the scheduled task exited with errorcode $($RootFolder.GetTask($TaskName).LastTaskResult)"
-            Remove-Module -Name "PSWindowsUpdate"
-            Exit 111
+            $RootFolder.DeleteTask($TaskName)
+            Exit 1
         }
     } Else {
         Write-Host "Timeout waiting for PSWindowsUpdate scheduled task to complete. The task will keep running in the background, please check it manually."
-        Remove-Module -Name "PSWindowsUpdate"
         Exit 0
     }
 } Else {
@@ -108,13 +105,10 @@ switch -regex ($update.Result) {
         $HResult = [Convert]::ToString($update.HResult, 16)
         $Message = $all_error_codes["0x$HResult"]
         Write-Host "Update $KB failed to install, reporting: $Message"
-        Remove-Module -Name "PSWindowsUpdate"
         Exit 2
     }
     default {
         Write-Host "Could not find update $KB in the Windows Update History, it seems installation has not succeeded!"
-        Remove-Module -Name "PSWindowsUpdate"
         Exit 5
     }
 }
-Remove-Module -Name "PSWindowsUpdate"
