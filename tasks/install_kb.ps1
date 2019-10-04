@@ -14,7 +14,7 @@ if (!(Test-Path -Path $Trackingpath)){
     New-Item -ItemType directory -Path $Trackingpath -Force
 }
 
-if ((Get-Content "$Trackingpath\$KB.flg") -eq "Installed") {
+if ((Get-Content "$Trackingpath\$KB.flg" -ErrorAction SilentlyContinue) -eq "Installed") {
     Write-Host "Update $KB is already installed, skipping installation..."
     Exit 0
 }
@@ -79,7 +79,7 @@ if ($PSSenderInfo){
             $RootFolder.DeleteTask($TaskName,0)
         } Else {
             Write-Host "Installation of $KB seems to have failed, the scheduled task exited with errorcode $($RootFolder.GetTask($TaskName).LastTaskResult)"
-            #$RootFolder.DeleteTask($TaskName,0)
+            $RootFolder.DeleteTask($TaskName,0)
             Exit 1
         }
     } Else {
