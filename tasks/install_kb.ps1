@@ -13,7 +13,8 @@ Import-Module -Name "$_installdir/windows_updates/files/PSWindowsUpdate"
 if (Get-WindowsUpdate -KBArticleID "$KB") {
     Write-Host "Update $KB is available on the update server, proceeding with installation..."
 } Else {
-    Write-Host "Update $KB is not provided by the update server!"; Exit 5
+    Write-Host "Update $KB is not provided by the update server!"
+    Exit 5
 }
 
 if ($PSSenderInfo){
@@ -21,7 +22,8 @@ if ($PSSenderInfo){
     $User = [Security.Principal.WindowsIdentity]::GetCurrent()
     $Role = (New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
     if (!$Role){
-        Write-Host "To install updates, the account used to connect over WinRM must have administrative permissions."; Exit 1
+        Write-Host "To install updates, the account used to connect over WinRM must have administrative permissions."
+        Exit 1
     }
     Write-Host "Running via WinRM: Creating scheduled task to install update $kb"
     [String]$TaskName = "PSWindowsUpdate"
@@ -48,7 +50,8 @@ if ($PSSenderInfo){
     $Scheduler.Connect('localhost')
     $RootFolder = $Scheduler.GetFolder("\")
     if ($Scheduler.GetRunningTasks(0) | Where-Object {$_.Name -eq $TaskName}) {
-        Write-Host "A PSWindowsUpdate scheduled task is already running, aborting creation of new scheduled task to install $KB"; Exit 1
+        Write-Host "A PSWindowsUpdate scheduled task is already running, aborting creation of new scheduled task to install $KB"
+        Exit 1
     }
     $RootFolder.RegisterTaskDefinition($TaskName, $Task, 6, "SYSTEM", $Null, 1) | Out-Null
     $RootFolder.GetTask($TaskName).Run(0) | Out-Null
@@ -65,10 +68,12 @@ if ($PSSenderInfo){
         if ($RootFolder.GetTask($TaskName).LastTaskResult -eq 0) {
             Write-Host "Installation of $KB took $([int]$timer.Elapsed.TotalSeconds) seconds"
         } Else {
-            Write-Host "Installation of $KB seems to have failed, the scheduled task exited with errorcode $($RootFolder.GetTask($TaskName).LastTaskResult)"; Exit 1
+            Write-Host "Installation of $KB seems to have failed, the scheduled task exited with errorcode $($RootFolder.GetTask($TaskName).LastTaskResult)"
+            Exit 111
         }
     } Else {
-        Write-Host "Timeout waiting for PSWindowsUpdate scheduled task to complete. The task will keep running in the background, please check it manually."; Exit 0
+        Write-Host "Timeout waiting for PSWindowsUpdate scheduled task to complete. The task will keep running in the background, please check it manually."
+        Exit 0
     }
 } Else {
     # Not running in a WinRM session, we can install Windows Updates directly
@@ -101,5 +106,8 @@ switch -regex ($update.Result) {
         Write-Host "Update $KB failed to install, reporting: $Message"
         Exit 2
     }
-    default { Write-Host "Could not find update $KB in the Windows Update History, it seems installation has not succeeded!"; Exit 5 }
+    default {
+        Write-Host "Could not find update $KB in the Windows Update History, it seems installation has not succeeded!"
+        Exit 5
+    }
 }
