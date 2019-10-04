@@ -1,0 +1,12 @@
+{
+    "description": "Test Task",
+    "input_method": "powershell",
+    "parameters": {
+      "kb": {
+        "description": "The KB number of the patch you want to install (e.g. KB123456)",
+        "type": "Pattern[/^KB\\d+$/]"
+      }
+    },
+    "files": ["windows_updates/files/"]
+  }
+
