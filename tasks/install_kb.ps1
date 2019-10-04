@@ -27,7 +27,7 @@ if ($PSSenderInfo){
     }
     Write-Host "Running via WinRM: Creating scheduled task to install update $kb"
     [String]$TaskName = "PSWindowsUpdate"
-    [String]$Script = "Import-Module -Name '$_installdir/windows_updates/files/PSWindowsUpdate'; Get-WindowsUpdate -KBArticleID '$KB' -Install -AcceptAll -IgnoreReboot)"
+    [String]$Script = "Import-Module -Name '$_installdir/windows_updates/files/PSWindowsUpdate'; Get-WindowsUpdate -KBArticleID '$KB' -Install -AcceptAll -IgnoreReboot"
   
     $Scheduler = New-Object -ComObject Schedule.Service
     $Task = $Scheduler.NewTask(0)
