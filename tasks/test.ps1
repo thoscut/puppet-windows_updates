@@ -7,4 +7,4 @@ Param(
 #Write-Host $_installdir
 #Get-ChildItem "$_installdir/windows_updates/files/"
 Import-Module -Name "$_installdir/windows_updates/files/PSWindowsUpdate"
-Install-WindowsUpdate -KBArticleID $kb
+Install-WindowsUpdate -KBArticleID $kb -Force
