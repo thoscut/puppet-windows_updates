@@ -25,7 +25,7 @@ if ($PSSenderInfo){
     }
     Write-Host "Running via WinRM: Creating scheduled task to install update $kb"
     [String]$TaskName = "PSWindowsUpdate"
-    [ScriptBlock]$Script = {Import-Module -Name "$_installdir/windows_updates/files/PSWindowsUpdate"; [void](Install-WindowsUpdate -KBArticleID "$KB" -AcceptAll -IgnoreReboot)}
+    [Scriptblock]$Script = {Import-Module -Name "$_installdir/windows_updates/files/PSWindowsUpdate"; [void](Install-WindowsUpdate -KBArticleID "$KB" -AcceptAll -IgnoreReboot)}.GetNewClosure()
   
     $Scheduler = New-Object -ComObject Schedule.Service
     $Task = $Scheduler.NewTask(0)
@@ -51,22 +51,25 @@ if ($PSSenderInfo){
         Write-Host "A PSWindowsUpdate scheduled task is already running, aborting creation of new scheduled task to install $KB"; Exit 1
     }
     $RootFolder.RegisterTaskDefinition($TaskName, $Task, 6, "SYSTEM", $Null, 1) | Out-Null
-    $RunningTask = $RootFolder.GetTask($TaskName).Run(0)
+    $RootFolder.GetTask($TaskName).Run(0) | Out-Null
     
     $timeout = 14400 # seconds
     $timer =  [Diagnostics.Stopwatch]::StartNew()
-    while (($RunningTask.State -ne 3) -and ($timer.Elapsed.TotalSeconds -lt $timeout)) {    
-        Write-Host "Waiting on PSWindowsUpdate scheduled task to complete..."
-        Start-Sleep -Seconds 120
-        $RunningTask.Refresh()
+    Write-Host "Waiting on PSWindowsUpdate scheduled task to complete..."
+    while (($RootFolder.GetTask($TaskName).State -ne 3) -and ($timer.Elapsed.TotalSeconds -lt $timeout)) {    
+        Start-Sleep -Seconds 10
+        $RootFolder.GetTask($TaskName).Refresh()
     }
     $timer.Stop()
-    if ($RunningTask.State -eq 3) {
-        Write-Host "Installation of $KB took $($timer.Elapsed.TotalSeconds) seconds"
+    if ($RootFolder.GetTask($TaskName).State -eq 3) {
+        if ($RootFolder.GetTask($TaskName).LastTaskResult -eq 0) {
+            Write-Host "Installation of $KB took $([int]$timer.Elapsed.TotalSeconds) seconds"
+        } Else {
+            Write-Host "Installation of $KB seems to have failed, the scheduled task exited with errorcode $($RootFolder.GetTask($TaskName).LastTaskResult)"; Exit 1
+        }
     } Else {
         Write-Host "Timeout waiting for PSWindowsUpdate scheduled task to complete. The task will keep running in the background, please check it manually."; Exit 0
     }
-
 } Else {
     # Not running in a WinRM session, we can install Windows Updates directly
     [void](Install-WindowsUpdate -KBArticleID "$KB" -AcceptAll -IgnoreReboot)
