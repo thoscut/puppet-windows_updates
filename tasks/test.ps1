@@ -45,13 +45,13 @@ if ($PSSenderInfo){
   
   $timeout = 14400 # seconds
   $timer =  [Diagnostics.Stopwatch]::StartNew()
-  while (($RunningTask.State -ne 'Ready') -and ($timer.Elapsed.TotalSeconds -lt $timeout)) {    
+  while (($RunningTask.State -ne 3) -and ($timer.Elapsed.TotalSeconds -lt $timeout)) {    
     Write-Host -Message "Waiting on PSWindowsUpdate scheduled task to complete..."
     Start-Sleep -Seconds 120
     $RunningTask.Refresh()
   }
   $timer.Stop()
-  if ($RunningTask.State -ne 'Ready') {
+  if ($RunningTask.State -ne 3) {
     Write-Error -Message "Timeout waiting for PSWindowsUpdate scheduled task to complete. The task will keep running in the background, please check it manually." -ErrorAction Stop
   }
   Write-Host -Message "Installation of $KB took $($timer.Elapsed.TotalSeconds) seconds"
