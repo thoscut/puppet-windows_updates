@@ -45,7 +45,7 @@ if ($PSSenderInfo){
   
     $Action = $Task.Actions.Create(0)
     $Action.Path = "powershell"
-    $Action.Arguments = "-Command $Script"
+    $Action.Arguments = "-Command ""$Script"""
     
     $Task.Principal.RunLevel = 1
   
