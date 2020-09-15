@@ -92,7 +92,7 @@ if ($PSSenderInfo){
     Start-Sleep 10
 }
 
-$update = Get-WUHistory | Where-Object KB -eq $KB | Sort-Object Date -Descending | Select-Object -First 1
+$update = Get-WUHistory -Last 10 | Where-Object KB -eq $KB | Sort-Object Date -Descending | Select-Object -First 1
 switch -regex ($update.Result) {
     'Succeeded' {
         Set-Content "$Trackingpath\$KB.flg" "Installed"
